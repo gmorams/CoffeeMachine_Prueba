@@ -119,4 +119,39 @@ class OrderService
             'extra_hot' => $extraHot ? 1 : 0,
         ]);
     }
+
+    public function getEarningsInfo()
+    {
+        $pdo = MysqlPdoClient::getPdo();
+
+        $stmt = $pdo->query('SELECT drink_type, SUM(money) AS total_money FROM orders GROUP BY drink_type');
+
+        $earningsInfo = [];
+        while ($row = $stmt->fetch()) {
+            $earningsInfo[$row['drink_type']] = $row['total_money'];
+        }
+
+        return $earningsInfo;
+    }
 }
+
+class ShowEarningsCommand extends Command
+{
+    protected static $defaultName = 'app:show-earnings';
+
+    private $orderService;
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $this->orderService = new OrderService(); // O inyecta OrderService aquí si lo prefieres
+
+        $earningsInfo = $this->orderService->getEarningsInfo();
+
+        foreach ($earningsInfo as $drinkType => $earnings) {
+            $output->writeln("Drink: $drinkType, Earnings: $earnings");
+        }
+
+        return Command::SUCCESS;
+    }
+}
+
