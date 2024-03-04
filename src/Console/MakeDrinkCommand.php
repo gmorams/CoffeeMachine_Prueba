@@ -44,22 +44,26 @@ class MakeDrinkCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $orderService = new OrderService();
-        $orderService->makeDrink($input, $output);
+        
+        $drinkType = $input->getArgument('drink-type');
+        $money = $input->getArgument('money');
+        $sugars = $input->getArgument('sugars');
+        $extraHot = $input->getOption('extra-hot');
+        
+        $orderService->makeDrink($output, $drinkType, $money, $sugars, $extraHot);
     }
 }
 
 class OrderService
 {
-    public function makeDrink(InputInterface $input, OutputInterface $output)
+    public function makeDrink(OutputInterface $output, $drinkType, $money, $sugars, $extraHot)
     {
-        $drinkType = strtolower($input->getArgument('drink-type'));
         if (!in_array($drinkType, ['tea', 'coffee', 'chocolate'])) {
             $output->writeln('The drink type should be tea, coffee or chocolate.');
             return;
         }
 
-        $money = $input->getArgument('money');
-        switch ($drinkType) {
+        switch ($drinkType) {   
             case 'tea':
                 if ($money < 0.4) {
                     $output->writeln('The tea costs 0.4.');
@@ -80,9 +84,7 @@ class OrderService
                 break;
         }
 
-        $sugars = $input->getArgument('sugars');
         $stick = false;
-        $extraHot = $input->getOption('extra-hot');
         if ($sugars >= 0 && $sugars <= 2) {
             $output->write('You have ordered a ' . $drinkType);
             if ($extraHot) {
