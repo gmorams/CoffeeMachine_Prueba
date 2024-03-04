@@ -1,5 +1,4 @@
 <?php
-
 namespace Pdpaola\CoffeeMachine\Console;
 
 use Symfony\Component\Console\Command\Command;
@@ -50,55 +49,59 @@ class MakeDrinkCommand extends Command
         $sugars = $input->getArgument('sugars');
         $extraHot = $input->getOption('extra-hot');
         
-        $orderService->makeDrink($output, $drinkType, $money, $sugars, $extraHot);
+        $orderService->placeOrder($output, $drinkType, $money, $sugars, $extraHot);
     }
 }
 
 class OrderService
 {
-    public function makeDrink(OutputInterface $output, $drinkType, $money, $sugars, $extraHot)
+    public function placeOrder(OutputInterface $output, $drinkType, $money, $sugars, $extraHot)
+    {
+        $this->validateInput($output, $drinkType, $money, $sugars);
+        $this->makeDrink($output, $drinkType, $sugars, $extraHot);
+        $this->storeOrder($drinkType, $sugars, $extraHot);
+    }
+
+    private function validateInput(OutputInterface $output, $drinkType, $money, $sugars)
     {
         if (!in_array($drinkType, ['tea', 'coffee', 'chocolate'])) {
-            $output->writeln('The drink type should be tea, coffee or chocolate.');
-            return;
+            throw new \InvalidArgumentException('The drink type should be tea, coffee or chocolate.');
         }
 
-        switch ($drinkType) {   
+        switch ($drinkType) {
             case 'tea':
                 if ($money < 0.4) {
-                    $output->writeln('The tea costs 0.4.');
-                    return;
+                    throw new \InvalidArgumentException('The tea costs 0.4.');
                 }
                 break;
             case 'coffee':
                 if ($money < 0.5) {
-                    $output->writeln('The coffee costs 0.5.');
-                    return;
+                    throw new \InvalidArgumentException('The coffee costs 0.5.');
                 }
                 break;
             case 'chocolate':
                 if ($money < 0.6) {
-                    $output->writeln('The chocolate costs 0.6.');
-                    return;
+                    throw new \InvalidArgumentException('The chocolate costs 0.6.');
                 }
                 break;
         }
 
-        $stick = false;
-        if ($sugars >= 0 && $sugars <= 2) {
-            $output->write('You have ordered a ' . $drinkType);
-            if ($extraHot) {
-                $output->write(' extra hot');
-            }
-
-            if ($sugars > 0) {
-                $stick = true;
-                $output->write(' with ' . $sugars . ' sugars (stick included)');
-            }
-            $output->writeln('');
-        } else {
-            $output->writeln('The number of sugars should be between 0 and 2.');
+        if ($sugars < 0 || $sugars > 2) {
+            throw new \InvalidArgumentException('The number of sugars should be between 0 and 2.');
         }
+    }
+
+    private function makeDrink(OutputInterface $output, $drinkType, $sugars, $extraHot)
+    {
+        $output->write("You have ordered a $drinkType");
+        if ($extraHot) {
+            $output->write(' extra hot');
+        }
+
+        if ($sugars > 0) {
+            $output->write(" with $sugars sugars (stick included)");
+        }
+        $output->writeln('');
 
         $pdo = MysqlPdoClient::getPdo();
 
@@ -111,3 +114,6 @@ class OrderService
         ]);
     }
 }
+
+
+        
