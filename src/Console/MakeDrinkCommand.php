@@ -97,5 +97,15 @@ class OrderService
         } else {
             $output->writeln('The number of sugars should be between 0 and 2.');
         }
+
+        $pdo = MysqlPdoClient::getPdo();
+
+        $stmt= $pdo->prepare( 'INSERT INTO orders (drink_type, sugars, stick, extra_hot) VALUES (:drink_type, :sugars, :stick, :extra_hot)');
+        $stmt->execute([
+            'drink_type' => $drinkType,
+            'sugars' => $sugars,
+            'stick' => $stick ?: 0,
+            'extra_hot' => $extraHot ?: 0,
+        ]);
     }
 }
