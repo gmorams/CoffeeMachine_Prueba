@@ -110,8 +110,7 @@ class OrderService
             'drink_type' => $drinkType,
             'sugars' => $sugars,
             'stick' => $stick ?: 0,
-            'extra_hot' => $extraHot ?: 0,
-        ]);
+            'extra_hot' => $e
     }
 }
 
